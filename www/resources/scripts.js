@@ -78,6 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 chatMessages.appendChild(botMessage);
 
+                // Add flare-execute output if present
+                if (data.flare_execute_output) {
+                    const executeOutput = document.createElement('div');
+                    executeOutput.className = 'flare-execute-output';
+                    executeOutput.textContent = data.flare_execute_output;
+                    chatMessages.appendChild(executeOutput);
+                }
+
                 // Scroll to the bottom of the chat
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             })
