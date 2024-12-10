@@ -37,6 +37,7 @@ REQUIRED_PACKAGES=(
     flask
     requests
     openai
+    pyyaml
 )
 for PACKAGE in "${REQUIRED_PACKAGES[@]}"; do
     if pip show "$PACKAGE" &>/dev/null; then
