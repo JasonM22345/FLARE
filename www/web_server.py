@@ -83,13 +83,92 @@ def get_git_repo_details(git_url):
         return f"Error processing Git repository: {str(e)}"
 
 
+def get_fuzzing_status(target_path):
+    """Check the status of the fuzzing process for the given target."""
+    try:
+        # Running afl-whatsup to get the status of the fuzzing process
+        output = subprocess.check_output(
+            ['afl-whatsup', '-s', os.path.join(FLARE_WORKSPACE, target_path, 'out')],
+            text=True
+        )
+        return output
+    except subprocess.CalledProcessError as e:
+        return f"Error retrieving fuzzing status: {str(e)}"
+
+
+def find_target_program(target_path):
+    """Find the target program in the fuzzing directory."""
+    # The target program is usually in the `out` directory (or similar)
+    # Check if there is a compiled binary in the `out` folder or any subfolder
+    out_dir = os.path.join(FLARE_WORKSPACE, target_path, 'out')
+    if os.path.isdir(out_dir):
+        for root, dirs, files in os.walk(out_dir):
+            for name in files:
+                if name and not name.startswith('README'):
+                    return os.path.join(root, name)  # Return the first found binary/executable
+    return None
+
+
+def generate_crash_report(target_path):
+    """Generate a report of any crashes encountered during fuzzing."""
+    crash_report = ""
+    crashes_dir = os.path.join(FLARE_WORKSPACE, target_path, 'crashes')
+
+    if os.path.isdir(crashes_dir):
+        for crash_file in os.listdir(crashes_dir):
+            crash_path = os.path.join(crashes_dir, crash_file)
+            if os.path.isfile(crash_path):
+                crash_report += f"### Crash Input: {crash_file}\n"
+                crash_report += f"Path: {crash_path}\n"
+
+                # Dynamically find the target program
+                target_program = find_target_program(target_path)
+                if target_program:
+                    # Replaying the crash using the found target program
+                    try:
+                        replay_output = subprocess.check_output(
+                            ['afl-fuzz', '-i', crash_path, '-o', 'out', '--', target_program],
+                            text=True
+                        )
+                        crash_report += f"Replay Output:\n{replay_output}\n"
+                    except subprocess.CalledProcessError as e:
+                        crash_report += f"Error replaying crash: {str(e)}\n"
+                else:
+                    crash_report += "Error: No target program found for replay.\n"
+
+                # A simple explanation of the crash
+                crash_report += f"### Crash Explanation:\nThis crash likely occurs due to unexpected input or an unhandled edge case in the program. Possible causes could include buffer overflows, invalid memory access, or other vulnerabilities in the code.\n\n"
+
+    return crash_report
+
+
 @app.route('/')
 def home():
     return render_template('index.html')
 
 
-@app.route('/tests')
+@app.route('/tests', methods=['GET', 'POST'])
 def tests():
+    if request.method == 'POST':
+        # Get the target name from the input form
+        target_name = request.form.get('target-name', '').strip()
+
+        if target_name:
+            # Generate the full path to the target in the workspace directory
+            target_path = os.path.join(FLARE_WORKSPACE, target_name)
+
+            # Generate fuzzing status report
+            fuzzing_status = get_fuzzing_status(target_path)
+            crash_report = generate_crash_report(target_path)
+
+            # Combine both reports (fuzzing status and crash report)
+            full_report = f"### Fuzzing Status for {target_name}:\n\n{fuzzing_status}\n\n### Crash Report:\n\n{crash_report}"
+
+            # Return the generated report to the template
+            return render_template('tests.html', target_name=target_name, fuzzing_report=full_report)
+        else:
+            return render_template('tests.html', error="Please provide a valid target name.")
+
     return render_template('tests.html')
 
 

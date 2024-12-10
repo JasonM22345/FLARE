@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuzzing Test Reports</title>
+</head>
+<body>
+    <h1>Fuzzing Test Reports</h1>
+
+    <form method="POST" id="target-form">
+        <label for="target-name">Enter the target name:</label>
+        <input type="text" id="target-name" name="target-name" placeholder="e.g. fuzzgoat" required>
+        <button type="submit">Generate Report</button>
+    </form>
+
+    {% if fuzzing_report %}
+        <div id="report-section">
+            <h2>Fuzzing Report for "{{ target_name }}":</h2>
+            <pre>{{ fuzzing_report }}</pre>
+        </div>
+    {% elif error %}
+        <div id="error-section">
+            <p style="color: red;">{{ error }}</p>
+        </div>
+    {% endif %}
+
+    <script src="/static/scripts.js"></script>
+</body>
+</html>
