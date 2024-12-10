@@ -24,7 +24,7 @@ general:
   - req: "If fuzzing in background, just do the fuzz command, but add '> /dev/null 2>&1 &' to it. example 'afl-fuzz -i in -o out ./app1 @@ > /dev/null 2>&1 &'"
   - req: "If writing a flare execute bash markdown, and git cloning, do an ls -l in the cloend folder after cloning"
   - req: "the make file is typically in the folder of the cloned git repo. check there if it exists. before calling make, ensure it exits. "
-
+  
 mapping:
   - request: "Fuzzing status for target path"
     action: "Bash markdown: `afl-whatsup -s {workspace_path}/{target_path}/out`"
