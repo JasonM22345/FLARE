@@ -84,6 +84,46 @@ else
     echo "Environment variables added to .bashrc."
 fi
 
+
+# Install crashwalk
+#!/bin/bash
+
+# Variables
+REPO_URL="https://github.com/bnagy/crashwalk.git"
+CLONE_DIR="$HOME/crashwalk"
+
+# Install prerequisites
+echo "Installing prerequisites..."
+sudo apt update
+sudo apt install -y git make gcc
+
+# Clone the Crashwalk repository
+echo "Cloning Crashwalk repository..."
+if [ -d "${CLONE_DIR}" ]; then
+    echo "Directory ${CLONE_DIR} already exists. Removing it to start fresh..."
+    rm -rf ${CLONE_DIR}
+fi
+git clone ${REPO_URL} ${CLONE_DIR}
+
+# Change to the repository directory
+cd ${CLONE_DIR}
+
+# Build Crashwalk
+echo "Building Crashwalk..."
+make
+
+# Verify build
+if [ -f "bin/crashwalk" ]; then
+    echo "Crashwalk built successfully! The executable is located at ${CLONE_DIR}/bin/crashwalk"
+else
+    echo "Crashwalk build failed. Check the output above for errors."
+    exit 1
+fi
+
+
+
+\
+
 # Reload .bashrc
 echo "Reloading .bashrc..."
 source ~/.bashrc
