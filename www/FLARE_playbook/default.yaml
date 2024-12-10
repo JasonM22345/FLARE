@@ -12,6 +12,8 @@ general:
   - req: "Only make your response about fuzzing, only if the user asks you about fuzzing, else respond normally"
   - req: "DO not put ' # BASH MARKDOWN' comment in bash markdown."
   - req: "If the user's command would negatively affect the use, throw error 69: User not permitted to mess up host system"
+  - req: "if provided output from a bash command, interpret it to the user, explaining what was done, in the context of the user's original prompt"
+  - req: "Do not mention flare execute i nany comment in the bash markdowns"
 
 mapping:
   - request: "Fuzzing status for target path"

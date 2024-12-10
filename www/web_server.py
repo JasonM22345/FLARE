@@ -91,12 +91,19 @@ def chat():
                 if execution_outputs:
                     chatbot_response["flare_execute_output"] = "\n\n".join(execution_outputs)
 
+                # Request interpretation of the execution output from the chatbot, along with the original user input
+                interpretation_request = f"Given the following user prompt:\n{user_input}\n\nAnd the following execution output:\n{execution_outputs[-1]}\n\nPlease interpret the results and explain what happened."
+                interpretation_response = requests.post('http://localhost:5001/chat', json={"message": interpretation_request}).json()
+                chatbot_response["flare_execute_interpretation"] = interpretation_response.get("response", "No interpretation available.")
+
             except Exception as e:
                 chatbot_response["flare_execute_output"] = f"Error during execution: {str(e)}"
 
         return jsonify(chatbot_response)
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Failed to connect to chat server: {str(e)}"})
+
+
 
 
 @app.route('/resources/<path:filename>')

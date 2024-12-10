@@ -76,15 +76,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     botMessage.textContent = 'Sorry, I encountered an error.';
                 }
 
-                chatMessages.appendChild(botMessage);
-
-                // Add flare-execute output if present
+                // Add flare-execute output and interpretation if present
                 if (data.flare_execute_output) {
                     const executeOutput = document.createElement('div');
                     executeOutput.className = 'flare-execute-output';
                     executeOutput.textContent = data.flare_execute_output;
                     chatMessages.appendChild(executeOutput);
                 }
+
+                if (data.flare_execute_interpretation) {
+                    const interpretationOutput = document.createElement('div');
+                    interpretationOutput.className = 'flare-execute-interpretation';
+                    interpretationOutput.textContent = `Interpretation: ${data.flare_execute_interpretation}`;
+                    chatMessages.appendChild(interpretationOutput);
+                }
+
+                chatMessages.appendChild(botMessage);
 
                 // Scroll to the bottom of the chat
                 chatMessages.scrollTop = chatMessages.scrollHeight;
