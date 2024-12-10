@@ -48,6 +48,54 @@ for PACKAGE in "${REQUIRED_PACKAGES[@]}"; do
     fi
 done
 
+
+# Install go
+# Variables
+GO_VERSION="1.23.2"
+GO_TAR="go${GO_VERSION}.linux-amd64.tar.gz"
+GO_URL="https://go.dev/dl/${GO_TAR}"
+GO_INSTALL_DIR="/usr/local/go-${GO_VERSION}"
+
+# Download Go tarball
+echo "Downloading Go ${GO_VERSION}..."
+wget -q --show-progress ${GO_URL} -O ${GO_TAR}
+
+# Extract tarball
+echo "Extracting Go tarball..."
+tar -xvf ${GO_TAR}
+
+# Move to /usr/local
+if [ -d "${GO_INSTALL_DIR}" ]; then
+    echo "Removing existing Go installation at ${GO_INSTALL_DIR}..."
+    sudo rm -rf ${GO_INSTALL_DIR}
+fi
+
+echo "Installing Go to ${GO_INSTALL_DIR}..."
+sudo mv go ${GO_INSTALL_DIR}
+
+# Update .bashrc
+echo "Updating .bashrc with Go environment variables..."
+GO_ENV="\n# Go environment variables\nexport GOROOT=${GO_INSTALL_DIR}\nexport GOPATH=\$HOME/go\nexport PATH=\$GOPATH/bin:\$GOROOT/bin:\$PATH"
+
+if grep -q "export GOROOT=${GO_INSTALL_DIR}" ~/.bashrc; then
+    echo "Go environment variables already set in .bashrc. Skipping..."
+else
+    echo -e "${GO_ENV}" >> ~/.bashrc
+    echo "Environment variables added to .bashrc."
+fi
+
+# Reload .bashrc
+echo "Reloading .bashrc..."
+source ~/.bashrc
+
+# Verify installation
+echo "Verifying Go installation..."
+go version
+
+# Cleanup
+echo "Cleaning up..."
+rm -f ${GO_TAR}
+
 echo "Setup completed successfully!"
 echo "To activate the virtual environment in the future, run: source ../FLARE/bin/activate"
 
