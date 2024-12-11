@@ -22,9 +22,10 @@ general:
   - req: "If fuzzing from a cloned github repo, of repo already has been set up with a input or seed (fodler), use that. DO nto recreate it."
   - req: "If adding a seed, make sure the seed file has a unique name. "
   - req: "If fuzzing in background, just do the fuzz command, but add '> /dev/null 2>&1 &' to it. example 'afl-fuzz -i in -o out ./app1 @@ > /dev/null 2>&1 &'"
+  - req: "When explaining crashs results, explain the actua"
   - req: "If writing a flare execute bash markdown, and git cloning, do an ls -l in the cloend folder after cloning"
   - req: "the make file is typically in the folder of the cloned git repo. check there if it exists. before calling make, ensure it exits. "
-  
+
 mapping:
   - request: "Fuzzing status for target path"
     action: "Bash markdown: `afl-whatsup -s {workspace_path}/{target_path}/out`"
@@ -33,4 +34,4 @@ mapping:
   - request: "Fuzz an application"
     action: "Do not overwrite any seeds. If you wwant to add to it, just create a new seed file."
   - request: "Fuzz an application"
-    action: "If make file provided, do master slave fuzzing, and start one instance fuzzing based on the exact default make file's compiled file, before instrumenting and compiling omtp other names for the other saves"
+    action: "If make file provided, do master slave fuzzing, and start one instance fuzzing based on the exact default make file's compiled file, before instrumenting and compiling to other names"

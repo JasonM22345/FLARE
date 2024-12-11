@@ -98,14 +98,16 @@ def get_fuzzing_status(target_path):
 
 
 def find_target_program(target_path):
-    """Find the target program in the fuzzing directory."""
-    out_dir = os.path.join(FLARE_WORKSPACE, target_path, 'out')
-    if os.path.isdir(out_dir):
-        for root, dirs, files in os.walk(out_dir):
-            for name in files:
-                if name and not name.startswith('README'):
-                    return os.path.join(root, name)
+    """Extract the target program name from the target path."""
+    # Extract the last part of the target path
+    target_exec_name = os.path.basename(target_path) # Target Executable name
+    target_program = os.path.join(FLARE_WORKSPACE, target_path, target_exec_name)
+    
+    # Verify the extracted name is valid
+    if target_program:
+        return target_program
     return None
+
 
 
 def generate_crash_report(target_path):
@@ -126,19 +128,44 @@ def generate_crash_report(target_path):
                     target_program = find_target_program(target_path)
                     if target_program:
                         # Replaying the crash using the found target program
+                        replay_output = ""
                         try:
-                            replay_output = subprocess.check_output(
+                            result = subprocess.run(
                                 [target_program, crash_path],
-                                text=True
+                                text=True,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                check=False  # Don't raise an exception on non-zero exit
                             )
-                            crash_report += f"Replay Output:\n{replay_output}\n"
-                        except subprocess.CalledProcessError as e:
-                            crash_report += f"Error replaying crash: {str(e)}\n"
+                            replay_output = (
+                                f"Replay Output (stdout):\n{result.stdout}\n"
+                                f"Replay Error (stderr):\n{result.stderr}\n"
+                                f"Exit Code: {result.returncode}\n"
+                            )
+                        except Exception as e:
+                            replay_output = f"Error running target program: {str(e)}\n"
+
+                        crash_report += replay_output
                     else:
                         crash_report += "Error: No target program found for replay.\n"
 
-                    # A simple explanation of the crash
-                    crash_report += f"### Crash Explanation:\nThis crash likely occurs due to unexpected input or an unhandled edge case in the program. Possible causes could include buffer overflows, invalid memory access, or other vulnerabilities in the code.\n\n"
+                    # Generate crash explanation using the chatbot
+                    try:
+                        message_to_send = {
+                            "prompt": "A crash from a fuzzer was replayed with the original executable. Explain the crash, what it could possibly be, in one to three sentences. Output below:",
+                            "crash_input": crash_file,
+                            "stdout": result.stdout,
+                            "stderr": result.stderr,
+                            "exit_code": result.returncode
+                        }
+
+                        response = requests.post('http://localhost:5001/chat', json={"message": message_to_send})
+                        response.raise_for_status()  # Ensure HTTP errors are caught
+                        chatbot_response = response.json().get("response", "Not enough context, review manually.")
+
+                        crash_report += f"### Crash Explanation:\n{chatbot_response}\n\n"
+                    except Exception as e:
+                        crash_report += f"### Crash Explanation:\nNot enough context, review manually. (Error: {str(e)})\n\n"
         else:
             # If the crashes directory does not exist
             crash_report = f"Error: Crashes directory not found at {crashes_dir}"
@@ -148,6 +175,7 @@ def generate_crash_report(target_path):
         crash_report = f"Error accessing or processing the crashes directory: {str(e)}"
 
     return crash_report
+
 
 
 @app.route('/')
@@ -169,7 +197,8 @@ def tests():
             crash_report = generate_crash_report(target_path)
 
             # Send fuzzing status to chatbot for explanation
-            explanation_request = f"Please explain the fuzzing status for the target {target_name}:\n{fuzzing_status}"
+            explanation_request = f"explain the fuzzing status for the target {target_name}:\n{fuzzing_status}. Also explain fuzzing results in terms of what kind of bug it probably is. help triage it."
+            explanation_request += f" Do not explain menial things like file system, etc."
             explanation_response = requests.post('http://localhost:5001/chat', json={"message": explanation_request}).json()
             fuzzing_explanation = explanation_response.get("response", "No explanation available.")
 
