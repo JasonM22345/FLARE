@@ -1,8 +1,3 @@
-# Author: Jason Mensah-Homiah - jm2jy@virginia.edu 12/07/2024
-
-Here’s the updated **README** with sample commands and file structure details included:
-
-```markdown
 # FLARE: Fuzzing Lifecycle Automation & Reporting Environment
 
 ## Description
