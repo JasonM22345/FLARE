@@ -1,4 +1,3 @@
-# Author: Jason Mensah-Homiah - jm2jy@virginia.edu 12/07/2024
 # FLARE: Fuzzing Lifecycle Automation & Reporting Environment
 
 ## Description
